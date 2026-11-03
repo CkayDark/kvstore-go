@@ -1,9 +1,21 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"net"
 )
+
+func handleConnection(conn net.Conn) {
+	defer conn.Close()
+	scanner := bufio.NewScanner(conn)
+	message := "Willkommen beim KV-Store!\n"
+	conn.Write([]byte(message))
+	for scanner.Scan() {
+		message := scanner.Text()
+		conn.Write([]byte("You said: " + message + "\n"))
+	}
+}
 
 func main() {
 
@@ -14,14 +26,14 @@ func main() {
 	}
 	defer listener.Close()
 
-	fmt.Println("Server is listening on Port :8080...")
-	conn, err := listener.Accept()
-	if err != nil {
-		fmt.Println("Verbindung fehlgeschlagen:", err)
-		return
-	}
-	defer conn.Close()
+	for {
+		fmt.Println("Server is listening on Port :8080...")
+		conn, err := listener.Accept()
+		if err != nil {
+			fmt.Println("Verbindung fehlgeschlagen:", err)
+			return
+		}
 
-	message := "Willkommen beim KV-Store!\n"
-	conn.Write([]byte(message))
+		handleConnection(conn)
+	}
 }
