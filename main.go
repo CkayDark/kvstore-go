@@ -26,14 +26,14 @@ func main() {
 	}
 	defer listener.Close()
 
+	fmt.Println("Server is listening on Port :8080...")
 	for {
-		fmt.Println("Server is listening on Port :8080...")
 		conn, err := listener.Accept()
 		if err != nil {
 			fmt.Println("Verbindung fehlgeschlagen:", err)
 			return
 		}
 
-		handleConnection(conn)
+		go handleConnection(conn)
 	}
 }
