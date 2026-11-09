@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"sync"
 )
 
 func handleConnection(conn net.Conn) {
@@ -45,6 +46,24 @@ func handleConnection(conn net.Conn) {
 			conn.Write([]byte("ERR: Unbekannter Befehl\n"))
 		}
 	}
+}
+
+type KVStore struct {
+	keyValueMap map[string]string
+	mu          sync.RWMutex
+}
+
+func NewKVStore() *KVStore {
+	return &KVStore{
+		keyValueMap: make(map[string]string),
+		mu:          sync.RWMutex{},
+	}
+}
+
+func (s *KVStore) Set(key string, value string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.keyValueMap[key] = value
 }
 
 func main() {
