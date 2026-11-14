@@ -66,6 +66,24 @@ func (s *KVStore) Set(key string, value string) {
 	s.keyValueMap[key] = value
 }
 
+func (s *KVStore) Get(key string) (string, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	val, ok := s.keyValueMap[key]
+	return val, ok
+}
+
+func (s *KVStore) Delete(key string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, ok := s.keyValueMap[key]
+	if ok {
+		delete(s.keyValueMap, key)
+		return ok
+	}
+	return ok
+}
+
 func main() {
 
 	listener, err := net.Listen("tcp", ":8080")
