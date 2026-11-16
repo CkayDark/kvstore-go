@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn, store *KVStore) {
 	defer conn.Close()
 	scanner := bufio.NewScanner(conn)
 	conn.Write([]byte("Willkommen beim KV-Store!\n"))
@@ -23,10 +23,11 @@ func handleConnection(conn net.Conn) {
 		switch parts[0] {
 		case "SET":
 			if len(parts) < 3 {
-				conn.Write([]byte("ERR: Parameter fehlen\n"))
+				conn.Write([]byte("-ERR: wrong number of arguments\n"))
 				continue
 			}
-			conn.Write([]byte("Benutzer erfolgreich erstellt\n"))
+			store.Set(parts[1], parts[2])
+			conn.Write([]byte("+OK\n"))
 
 		case "GET":
 			if len(parts) < 2 {
@@ -94,6 +95,7 @@ func main() {
 	defer listener.Close()
 
 	fmt.Println("Server is listening on Port :8080...")
+	store := NewKVStore()
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -101,6 +103,6 @@ func main() {
 			return
 		}
 
-		go handleConnection(conn)
+		go handleConnection(conn, store)
 	}
 }
