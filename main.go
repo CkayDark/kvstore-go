@@ -31,20 +31,30 @@ func handleConnection(conn net.Conn, store *KVStore) {
 
 		case "GET":
 			if len(parts) < 2 {
-				conn.Write([]byte("ERR: Parameter fehlt\n"))
+				conn.Write([]byte("-ERR: parameter missing\n"))
 				continue
 			}
-			conn.Write([]byte("Eintrag\n"))
+			val, exists := store.Get(parts[1])
+			if exists {
+				conn.Write([]byte(val + "\n"))
+			} else {
+				conn.Write([]byte("(nil)\n"))
+			}
 
 		case "DEL":
 			if len(parts) < 2 {
-				conn.Write([]byte("ERR: Parameter fehlt\n"))
+				conn.Write([]byte("-ERR: parameter missing\n"))
 				continue
 			}
-			conn.Write([]byte("Eintrag gelöscht\n"))
+			ok := store.Delete(parts[1])
+			if ok {
+				conn.Write([]byte("1\n"))
+			} else {
+				conn.Write([]byte("0\n"))
+			}
 
 		default:
-			conn.Write([]byte("ERR: Unbekannter Befehl\n"))
+			conn.Write([]byte("-ERR: unknown error\n"))
 		}
 	}
 }
