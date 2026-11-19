@@ -26,7 +26,8 @@ func handleConnection(conn net.Conn, store *KVStore) {
 				conn.Write([]byte("-ERR: wrong number of arguments\n"))
 				continue
 			}
-			store.Set(parts[1], parts[2])
+			val := strings.Join(parts[2:], " ")
+			store.Set(parts[1], val)
 			conn.Write([]byte("+OK\n"))
 
 		case "GET":
@@ -54,42 +55,42 @@ func handleConnection(conn net.Conn, store *KVStore) {
 			}
 
 		default:
-			conn.Write([]byte("-ERR: unknown error\n"))
+			conn.Write([]byte("-ERR: unknown command\n"))
 		}
 	}
 }
 
 type KVStore struct {
-	keyValueMap map[string]string
-	mu          sync.RWMutex
+	data map[string]string
+	mu   sync.RWMutex
 }
 
 func NewKVStore() *KVStore {
 	return &KVStore{
-		keyValueMap: make(map[string]string),
-		mu:          sync.RWMutex{},
+		data: make(map[string]string),
+		mu:   sync.RWMutex{},
 	}
 }
 
 func (s *KVStore) Set(key string, value string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.keyValueMap[key] = value
+	s.data[key] = value
 }
 
 func (s *KVStore) Get(key string) (string, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	val, ok := s.keyValueMap[key]
+	val, ok := s.data[key]
 	return val, ok
 }
 
 func (s *KVStore) Delete(key string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	_, ok := s.keyValueMap[key]
+	_, ok := s.data[key]
 	if ok {
-		delete(s.keyValueMap, key)
+		delete(s.data, key)
 		return ok
 	}
 	return ok
