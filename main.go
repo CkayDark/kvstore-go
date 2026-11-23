@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"os"
 	"strings"
 	"sync"
 )
@@ -63,13 +64,20 @@ func handleConnection(conn net.Conn, store *KVStore) {
 type KVStore struct {
 	data map[string]string
 	mu   sync.RWMutex
+	file *os.File
 }
 
-func NewKVStore() *KVStore {
+func NewKVStore(filepath string) (*KVStore, error) {
+
+	file, err := os.OpenFile(filepath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return nil, err
+	}
 	return &KVStore{
 		data: make(map[string]string),
 		mu:   sync.RWMutex{},
-	}
+		file: file,
+	}, nil
 }
 
 func (s *KVStore) Set(key string, value string) {
