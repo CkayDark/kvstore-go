@@ -84,6 +84,7 @@ func (s *KVStore) Set(key string, value string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.data[key] = value
+	s.file.WriteString("SET " + key + " " + value + "\n")
 }
 
 func (s *KVStore) Get(key string) (string, bool) {
@@ -98,6 +99,7 @@ func (s *KVStore) Delete(key string) bool {
 	defer s.mu.Unlock()
 	_, ok := s.data[key]
 	if ok {
+		s.file.WriteString("DEL " + key + "\n")
 		delete(s.data, key)
 		return ok
 	}
@@ -114,11 +116,16 @@ func main() {
 	defer listener.Close()
 
 	fmt.Println("Server is listening on Port :8080...")
-	store := NewKVStore()
+	store, err := NewKVStore("database.aof")
+	if err != nil {
+		fmt.Println("failed initialization of storage", err)
+		return
+	}
+
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			fmt.Println("Verbindung fehlgeschlagen:", err)
+			fmt.Println("connection failed:", err)
 			return
 		}
 
